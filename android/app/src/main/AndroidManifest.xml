@@ -49,4 +49,9 @@
     <!-- Reminders use inexact alarms (isExactNotification: false), so the exact-alarm
          permission that @capacitor/local-notifications declares is removed. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
+
+    <!-- Biometric unlock of the SQLite plugin is disabled (capacitor.config.ts), so the
+         permissions its AndroidX biometric dependency declares are removed. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
 </manifest>
