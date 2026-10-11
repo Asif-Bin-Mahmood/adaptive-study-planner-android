@@ -1,0 +1,105 @@
+name: Android CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: |
+          mkdir -p build-report
+          npm test 2>&1 | tee build-report/tests.txt
+
+      - name: Production web build
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Install Android SDK packages
+        run: |
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0" > /dev/null
+          exit "${PIPESTATUS[1]}"
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Verify APK and write report
+        run: |
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$apk" || { echo "APK missing or empty"; exit 1; }
+          cp "$apk" build-report/app-debug.apk
+          (cd build-report && sha256sum app-debug.apk > app-debug.apk.sha256)
+          aapt2="$ANDROID_HOME/build-tools/35.0.0/aapt2"
+          {
+            echo "# Build report"
+            echo
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "- Node $(node -v), $(java -version 2>&1 | head -1)"
+            echo "- APK size: $(stat -c %s build-report/app-debug.apk) bytes"
+            echo "- SHA-256: \`$(cut -d' ' -f1 build-report/app-debug.apk.sha256)\`"
+            echo
+            echo "## Tests"
+            echo '```'
+            grep -E "Test Files|Tests " build-report/tests.txt
+            echo '```'
+            echo
+            echo "## Permissions in the APK"
+            echo '```'
+            "$aapt2" dump permissions build-report/app-debug.apk
+            echo '```'
+          } > build-report/REPORT.md
+          cat build-report/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: app-debug-${{ github.sha }}
+          path: |
+            build-report/app-debug.apk
+            build-report/app-debug.apk.sha256
+            build-report/REPORT.md
+            build-report/tests.txt
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,670 @@
+{
+ "packageId": "demo-term",
+ "source": "Synthetic test fixture. Fictional courses, rooms and dates; not real user data.",
+ "term": {
+  "name": "Demo Semester",
+  "institution": null,
+  "academicYear": null,
+  "startDate": "2030-10-06",
+  "endDate": "2031-01-22",
+  "timezone": "UTC",
+  "status": "current",
+  "rules": {
+   "sleep": {
+    "lightsOut": "22:45",
+    "wake": "06:15",
+    "noDeepWorkAfter": "21:30"
+   },
+   "weekStartsOn": 0,
+   "partialWeight": 0.5,
+   "optional": {
+    "enabled": false,
+    "minCoreCompletion": 0.85,
+    "minAvgSleep": 7,
+    "requireNoConcentrationDrop": true,
+    "maxAddPerWeek": 1
+   },
+   "reduce": {
+    "belowCompletion": 0.7,
+    "belowSleep": 7
+   },
+   "weakCourse": {
+    "accuracyBelow": 0.6,
+    "recurringErrorCount": 3
+   },
+   "disruptedDay": {
+    "maxFlexibleItems": 2,
+    "continuityMinutes": 10,
+    "shortenToMinutes": 25
+   },
+   "backlog": {
+    "maxDisplacedPerWeek": 3,
+    "nextDayMaxMoved": 1
+   },
+   "retest": {
+    "offsetsDays": [
+     2,
+     7
+    ],
+    "beforeExam": true,
+    "failRetryDays": 2
+   },
+   "mastery": {
+    "independentPassesRequired": 2,
+    "separateDays": true
+   },
+   "dailyBufferMinutes": 60,
+   "errorCategories": [
+    "Knowledge gap",
+    "Misunderstanding",
+    "Execution error",
+    "Question-reading error",
+    "Other"
+   ],
+   "notifications": {
+    "enabled": false,
+    "minutesBefore": 10
+   },
+   "trial": {
+    "start": "2030-10-20",
+    "end": "2030-11-02"
+   }
+  }
+ },
+ "exceptions": [
+  {
+   "key": "break",
+   "startDate": "2030-10-22",
+   "endDate": "2030-10-23",
+   "name": "Autumn break",
+   "kind": "holiday",
+   "cancelsClasses": true,
+   "suppressesStudy": false
+  },
+  {
+   "key": "holiday2",
+   "startDate": "2030-12-25",
+   "endDate": "2030-12-25",
+   "name": "Public holiday",
+   "kind": "holiday",
+   "cancelsClasses": true,
+   "suppressesStudy": false
+  },
+  {
+   "key": "mid",
+   "startDate": "2030-11-24",
+   "endDate": "2030-11-30",
+   "name": "Midterm week",
+   "kind": "exam_period",
+   "cancelsClasses": false,
+   "suppressesStudy": false
+  },
+  {
+   "key": "ovr-alg",
+   "startDate": "2030-11-25",
+   "endDate": "2030-11-25",
+   "name": "ALG101 midterm day plan",
+   "kind": "override_day",
+   "cancelsClasses": false,
+   "suppressesStudy": true
+  },
+  {
+   "key": "finals",
+   "startDate": "2031-01-12",
+   "endDate": "2031-01-22",
+   "name": "Final exams",
+   "kind": "exam_period",
+   "cancelsClasses": false,
+   "suppressesStudy": false
+  }
+ ],
+ "workstreams": [
+  {
+   "key": "alg",
+   "type": "course",
+   "code": "ALG101",
+   "name": "Algorithms I",
+   "color": "#3b6fb6",
+   "priority": 2,
+   "minWeeklyMinutes": 60,
+   "targetWeeklyMinutes": 60,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": "1 timed set; score and errors logged",
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "phy",
+   "type": "course",
+   "code": "PHY110",
+   "name": "Physics I",
+   "color": "#2f8f6b",
+   "priority": 2,
+   "minWeeklyMinutes": 60,
+   "targetWeeklyMinutes": 60,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": "1 timed set; score and errors logged",
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "sta",
+   "type": "course",
+   "code": "STA120",
+   "name": "Statistics I",
+   "color": "#8a5cb8",
+   "priority": 2,
+   "minWeeklyMinutes": 60,
+   "targetWeeklyMinutes": 60,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": null,
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "phyl",
+   "type": "lab",
+   "code": "PHY110L",
+   "name": "Physics I lab",
+   "color": "#b5562f",
+   "priority": 1,
+   "minWeeklyMinutes": 75,
+   "targetWeeklyMinutes": 75,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": "Pre-lab before every lab; lab log the same day",
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "recall",
+   "type": "habit",
+   "code": null,
+   "name": "Same-day lecture recall",
+   "color": "#6b7280",
+   "priority": 2,
+   "minWeeklyMinutes": 0,
+   "targetWeeklyMinutes": 120,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": null,
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "retests",
+   "type": "habit",
+   "code": null,
+   "name": "Error-log retests",
+   "color": "#6b7280",
+   "priority": 2,
+   "minWeeklyMinutes": 0,
+   "targetWeeklyMinutes": 30,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": null,
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "project",
+   "type": "project",
+   "code": null,
+   "name": "Course project",
+   "color": "#a0522d",
+   "priority": 3,
+   "minWeeklyMinutes": 30,
+   "targetWeeklyMinutes": 150,
+   "extensionWeeklyMinutes": 60,
+   "floorRule": null,
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "practice",
+   "type": "other",
+   "code": null,
+   "name": "Programming practice",
+   "color": "#2b7a78",
+   "priority": 5,
+   "minWeeklyMinutes": 30,
+   "targetWeeklyMinutes": 60,
+   "extensionWeeklyMinutes": 60,
+   "floorRule": null,
+   "deadline": null,
+   "notes": null
+  },
+  {
+   "key": "review",
+   "type": "habit",
+   "code": null,
+   "name": "Weekly review",
+   "color": "#6b7280",
+   "priority": 2,
+   "minWeeklyMinutes": 20,
+   "targetWeeklyMinutes": 20,
+   "extensionWeeklyMinutes": 0,
+   "floorRule": null,
+   "deadline": null,
+   "notes": null
+  }
+ ],
+ "commitments": [
+  {
+   "key": "cALG",
+   "workstream": "alg",
+   "kind": "class",
+   "title": "ALG101 lecture",
+   "location": "Room 101",
+   "weekdays": [
+    0,
+    2
+   ],
+   "startTime": "09:00",
+   "endTime": "10:20",
+   "validFrom": "2030-10-06",
+   "validTo": "2031-01-10"
+  },
+  {
+   "key": "cPHY",
+   "workstream": "phy",
+   "kind": "class",
+   "title": "PHY110 lecture",
+   "location": "Room 204",
+   "weekdays": [
+    0,
+    2
+   ],
+   "startTime": "10:30",
+   "endTime": "11:50",
+   "validFrom": "2030-10-06",
+   "validTo": "2031-01-10"
+  },
+  {
+   "key": "cSTA",
+   "workstream": "sta",
+   "kind": "class",
+   "title": "STA120 lecture",
+   "location": "Room 305",
+   "weekdays": [
+    1,
+    3
+   ],
+   "startTime": "09:00",
+   "endTime": "10:20",
+   "validFrom": "2030-10-06",
+   "validTo": "2031-01-10"
+  },
+  {
+   "key": "cLAB",
+   "workstream": "phyl",
+   "kind": "lab",
+   "title": "PHY110L lab",
+   "location": "Lab 2",
+   "weekdays": [
+    3
+   ],
+   "startTime": "13:00",
+   "endTime": "15:50",
+   "validFrom": "2030-10-06",
+   "validTo": "2031-01-10"
+  }
+ ],
+ "commitmentChanges": [
+  {
+   "commitment": "cSTA",
+   "date": "2030-11-27",
+   "kind": "cancelled",
+   "reason": "STA120 midterm"
+  }
+ ],
+ "assessments": [
+  {
+   "key": "mALG",
+   "workstream": "alg",
+   "kind": "midterm",
+   "title": "ALG101 midterm",
+   "date": "2030-11-25",
+   "startTime": "16:30",
+   "endTime": "18:30",
+   "confirmed": true,
+   "notes": null
+  },
+  {
+   "key": "mPHY",
+   "workstream": "phy",
+   "kind": "midterm",
+   "title": "PHY110 midterm",
+   "date": "2030-11-26",
+   "startTime": "16:30",
+   "endTime": "18:30",
+   "confirmed": true,
+   "notes": null
+  },
+  {
+   "key": "mSTA",
+   "workstream": "sta",
+   "kind": "midterm",
+   "title": "STA120 midterm",
+   "date": "2030-11-27",
+   "startTime": "09:00",
+   "endTime": "11:00",
+   "confirmed": true,
+   "notes": null
+  },
+  {
+   "key": "fALG",
+   "workstream": "alg",
+   "kind": "final",
+   "title": "ALG101 final",
+   "date": "2031-01-13",
+   "startTime": "09:00",
+   "endTime": "12:00",
+   "confirmed": true,
+   "notes": null
+  },
+  {
+   "key": "fPHY",
+   "workstream": "phy",
+   "kind": "final",
+   "title": "PHY110 final",
+   "date": "2031-01-15",
+   "startTime": "09:00",
+   "endTime": "12:00",
+   "confirmed": true,
+   "notes": null
+  },
+  {
+   "key": "fSTA",
+   "workstream": "sta",
+   "kind": "final",
+   "title": "STA120 final",
+   "date": "2031-01-19",
+   "startTime": "14:00",
+   "endTime": "17:00",
+   "confirmed": true,
+   "notes": null
+  }
+ ],
+ "templates": [
+  {
+   "key": "sun-algts",
+   "workstream": "alg",
+   "title": "ALG101 timed set",
+   "output": "5+ questions under a timer; score and errors logged",
+   "kind": "timed_set",
+   "weekday": 0,
+   "startTime": "16:00",
+   "durationMin": 60,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "sun-recall",
+   "workstream": "recall",
+   "title": "Same-day recall: ALG101, PHY110",
+   "output": null,
+   "kind": "recall",
+   "weekday": 0,
+   "startTime": "19:00",
+   "durationMin": 30,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": "cALG",
+   "dependsOnWeekday": 0
+  },
+  {
+   "key": "mon-stats",
+   "workstream": "sta",
+   "title": "STA120 timed set",
+   "output": null,
+   "kind": "timed_set",
+   "weekday": 1,
+   "startTime": "16:00",
+   "durationMin": 60,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "mon-recall",
+   "workstream": "recall",
+   "title": "STA120 recall",
+   "output": null,
+   "kind": "recall",
+   "weekday": 1,
+   "startTime": "19:00",
+   "durationMin": 30,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": "cSTA",
+   "dependsOnWeekday": 1
+  },
+  {
+   "key": "tue-phyts",
+   "workstream": "phy",
+   "title": "PHY110 timed set",
+   "output": null,
+   "kind": "timed_set",
+   "weekday": 2,
+   "startTime": "16:00",
+   "durationMin": 60,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "tue-recall",
+   "workstream": "recall",
+   "title": "Same-day recall: ALG101, PHY110",
+   "output": null,
+   "kind": "recall",
+   "weekday": 2,
+   "startTime": "19:00",
+   "durationMin": 30,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": "cALG",
+   "dependsOnWeekday": 2
+  },
+  {
+   "key": "tue-prelab",
+   "workstream": "phyl",
+   "title": "PHY110L pre-lab",
+   "output": null,
+   "kind": "prelab",
+   "weekday": 2,
+   "startTime": "20:00",
+   "durationMin": 45,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": "cLAB",
+   "dependsOnWeekday": 3
+  },
+  {
+   "key": "wed-lablog",
+   "workstream": "phyl",
+   "title": "PHY110L lab log",
+   "output": null,
+   "kind": "lablog",
+   "weekday": 3,
+   "startTime": "17:00",
+   "durationMin": 30,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": "cLAB",
+   "dependsOnWeekday": 3
+  },
+  {
+   "key": "wed-recall",
+   "workstream": "recall",
+   "title": "STA120 recall",
+   "output": null,
+   "kind": "recall",
+   "weekday": 3,
+   "startTime": "19:00",
+   "durationMin": 30,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": "cSTA",
+   "dependsOnWeekday": 3
+  },
+  {
+   "key": "thu-project",
+   "workstream": "project",
+   "title": "Project: implementation",
+   "output": null,
+   "kind": "deep",
+   "weekday": 4,
+   "startTime": "15:00",
+   "durationMin": 90,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "thu-retest",
+   "workstream": "retests",
+   "title": "Error-log retests",
+   "output": null,
+   "kind": "retest",
+   "weekday": 4,
+   "startTime": "18:00",
+   "durationMin": 30,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "fri-project",
+   "workstream": "project",
+   "title": "Project: write-up",
+   "output": null,
+   "kind": "deep",
+   "weekday": 5,
+   "startTime": "10:00",
+   "durationMin": 60,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "fri-practice",
+   "workstream": "practice",
+   "title": "Programming practice",
+   "output": null,
+   "kind": "deep",
+   "weekday": 5,
+   "startTime": "15:00",
+   "durationMin": 60,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "sat-review",
+   "workstream": "review",
+   "title": "Weekly review and next-week plan",
+   "output": null,
+   "kind": "review",
+   "weekday": 6,
+   "startTime": "20:00",
+   "durationMin": 20,
+   "tier": "core",
+   "active": true,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "sat-opt-practice",
+   "workstream": "practice",
+   "title": "Programming practice extension",
+   "output": null,
+   "kind": "deep",
+   "weekday": 6,
+   "startTime": "10:00",
+   "durationMin": 60,
+   "tier": "optional",
+   "active": false,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  },
+  {
+   "key": "sat-opt-project",
+   "workstream": "project",
+   "title": "Project extension",
+   "output": null,
+   "kind": "deep",
+   "weekday": 6,
+   "startTime": "14:00",
+   "durationMin": 60,
+   "tier": "optional",
+   "active": false,
+   "validFrom": "2030-10-20",
+   "validTo": "2031-01-10",
+   "dependsOn": null,
+   "dependsOnWeekday": null
+  }
+ ],
+ "sessions": [
+  {
+   "key": "ovr-retest",
+   "workstream": "alg",
+   "date": "2030-11-25",
+   "startTime": "08:30",
+   "durationMin": 60,
+   "title": "ALG101 error-log retest (no new material)",
+   "output": null,
+   "kind": "retest",
+   "tier": "core",
+   "note": "Exam-day plan"
+  },
+  {
+   "key": "ovr-review",
+   "workstream": "phy",
+   "date": "2030-11-25",
+   "startTime": "20:00",
+   "durationMin": 30,
+   "title": "PHY110 light review for tomorrow",
+   "output": null,
+   "kind": "review",
+   "tier": "core",
+   "note": "Exam-day plan"
+  }
+ ]
+}

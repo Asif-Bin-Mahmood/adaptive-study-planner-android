@@ -1,0 +1,31 @@
+# Dependencies and build output
+node_modules
+dist/
+coverage/
+*.log
+*.apk
+*.aab
+build-report/
+
+# Local configuration and secrets: never commit
+.env
+.env.*
+local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+google-services.json
+
+# Exported user data
+study-planner-backup*.json
+*.sqlite
+*.db
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
