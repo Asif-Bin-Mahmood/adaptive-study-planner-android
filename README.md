@@ -2,6 +2,12 @@
 
 An offline Android app for planning a semester's study blocks, logging what actually happened, and replanning when a day goes wrong.
 
+## Download
+
+**[Latest release](https://github.com/Asif-Bin-Mahmood/adaptive-study-planner-android/releases/latest)** · direct APK: [study-planner.apk](https://github.com/Asif-Bin-Mahmood/adaptive-study-planner-android/releases/latest/download/study-planner.apk)
+
+To install on Android 7.0 or newer, open the downloaded APK and allow your browser or file manager to install unknown apps when asked. Each release lists the APK's SHA-256 checksum. Updates install over the existing app only when they are signed with the same release key, so always update from this repository's Releases page.
+
 ## Features
 
 - Setup wizard for any semester: courses, labs, class times, exams, projects
@@ -34,7 +40,7 @@ npx cap sync android
 cd android && ./gradlew assembleDebug
 ```
 
-CI builds a debug APK on every push to `main` and attaches it to the workflow run. See [docs/BUILD.md](docs/BUILD.md) for Android Studio and device steps, and [docs/DATABASE.md](docs/DATABASE.md) for the schema.
+See [docs/BUILD.md](docs/BUILD.md) for Android Studio and device steps, [docs/RELEASE_SIGNING.md](docs/RELEASE_SIGNING.md) for signed releases, and [docs/DATABASE.md](docs/DATABASE.md) for the schema.
 
 ## Privacy
 

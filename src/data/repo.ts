@@ -1,5 +1,6 @@
 // Repository: the only place that knows SQL. UI and rules talk to this class.
 import { addDays, isISODate, startOfWeek } from '../domain/dates';
+import { version as packageVersion } from '../../package.json';
 import { draftSessions } from '../domain/schedule';
 import { normalizeRules, validateRules } from '../domain/rules';
 import { buildRetests, errorStatusAfter, followUpRetest } from '../domain/retest';
@@ -29,7 +30,7 @@ import { BACKUP_FORMAT, BACKUP_FORMAT_VERSION, validateBackup, type BackupFile, 
 import { TxRunner, type SqlDriver, type SqlValue } from './driver';
 import { BACKUP_TABLES, LATEST_VERSION, MIGRATIONS } from './schema';
 
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION: string = packageVersion;
 
 export class DowngradeError extends Error {}
 

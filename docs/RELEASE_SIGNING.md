@@ -1,73 +1,98 @@
-# Signed release build
+# Release signing and publishing
 
-A debug APK is fine for your own phone. Build a signed release if you want a build
-you can keep updating for years, or install on more than one phone, without losing
-data. Android only installs an update over an existing app when both are signed with
-the same key. **If you lose the key, you can never update that install again.** You
-would have to export a backup, uninstall, install the new build and restore.
+Releases are built and signed by `.github/workflows/release.yml` and published as
+`study-planner.apk` on the repository's Releases page.
 
-No keys or passwords are included in this repository. You create them once.
+Android only installs an update over an existing app when both APKs are signed with the
+**same key**. If the key is lost or changed, users must uninstall (deleting their local
+data) to install a new version. Create the key once, back it up, and never replace it.
+The workflow refuses to publish an APK whose certificate does not match the fingerprint
+stored in the `RELEASE_CERT_SHA256` variable.
 
-## 1. Create a keystore (once)
+No keystore or password is stored in this repository.
 
-In PowerShell, using Android Studio's JDK:
+## One-time setup
 
-```powershell
-& "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -genkeypair -v `
-  -keystore C:\keys\study-planner-release.jks `
+### 1. Create the keystore
+
+Use a JDK 17+ `keytool` (Android Studio ships one in `jbr/bin`). PKCS12 keystores use one
+password for both the store and the key, so enter the same password for both.
+
+```sh
+keytool -genkeypair -v -storetype PKCS12 \
+  -keystore study-planner-release.p12 \
   -alias studyplanner -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Choose a strong password and answer the name questions (any values are fine).
-Keep the `.jks` file **outside** the project folder.
+Keep the file outside the repository folder.
 
-Or in Android Studio: **Build > Generate Signed App Bundle / APK > APK > Create new…**.
+### 2. Back it up
 
-## 2. Tell Gradle where it is
+Store the `.p12` file and its password in two places you control, for example a
+password manager and an encrypted USB drive. Never upload it to GitHub, a chat or a
+shared drive.
 
-Create `android\keystore.properties` (it is listed in `.gitignore` and must never be
-shared or zipped):
+### 3. Note the certificate fingerprint
+
+```sh
+keytool -list -v -storetype PKCS12 -keystore study-planner-release.p12 -alias studyplanner
+```
+
+Copy the `SHA256:` value (for example `AB:CD:...`).
+
+### 4. Add the GitHub Actions secrets and variable
+
+In **Settings > Secrets and variables > Actions**:
+
+| Tab | Name | Value |
+| --- | --- | --- |
+| Secrets | `ANDROID_KEYSTORE_BASE64` | the keystore file, base64-encoded (below) |
+| Secrets | `ANDROID_KEYSTORE_PASSWORD` | the keystore password |
+| Secrets | `ANDROID_KEY_ALIAS` | `studyplanner` |
+| Secrets | `ANDROID_KEY_PASSWORD` | the same password |
+| Variables | `RELEASE_CERT_SHA256` | the fingerprint from step 3 |
+
+Base64-encode the keystore without line breaks:
+
+- macOS / Linux: `base64 < study-planner-release.p12 | tr -d '\n'`
+- Windows PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("study-planner-release.p12"))`
+
+Paste the output straight into the secret and do not save it in a file.
+
+### 5. Check the setup without publishing
+
+Open **Actions > Release > Run workflow** on `main`. This builds and verifies a signed
+APK but publishes nothing. It fails with a list of anything missing.
+
+## Publishing a version
+
+1. Raise `version` in `package.json` (for example `1.0.0` to `1.0.1`). The Android
+   `versionName` and `versionCode` are derived from it, and Android refuses an update
+   whose `versionCode` is not higher.
+2. Run `npm install --package-lock-only`, commit, and push to `main`.
+3. Tag and push: `git tag v1.0.1 && git push origin v1.0.1`.
+
+The workflow checks that the tag matches `package.json`, runs the type check, tests and
+build, signs the APK, verifies the signature and certificate fingerprint, and creates
+the release with the APK, its SHA-256 file and a changelog.
+
+## Local signed builds
+
+Create `android/keystore.properties` (ignored by Git):
 
 ```
-storeFile=C:\\keys\\study-planner-release.jks
-storePassword=YOUR_STORE_PASSWORD
+storeFile=/absolute/path/to/study-planner-release.p12
+storePassword=...
 keyAlias=studyplanner
-keyPassword=YOUR_KEY_PASSWORD
+keyPassword=...
 ```
 
-`android/app/build.gradle` reads this file only if it exists. Without it, release
-builds are produced unsigned.
+Then `npm run build && npx cap sync android && cd android && ./gradlew assembleRelease`.
+Without signing details the release APK is unsigned and cannot be installed.
 
-## 3. Build
+## Switching from a debug build
 
-```powershell
-npm run build
-npx cap sync android
-cd android
-.\gradlew.bat assembleRelease
-Get-FileHash app\build\outputs\apk\release\app-release.apk -Algorithm SHA256
-```
-
-Before each new release, raise `versionCode` (and `versionName`) in
-`android/app/build.gradle`. Android refuses to install an update with the same or a
-lower `versionCode`.
-
-## 4. Switching from the debug build
-
-Debug and release builds are signed with different keys, so Android will not install
-one over the other. Once only:
-
-1. In the debug app: Settings > Backup and restore > **Export backup**, and save the
-   file somewhere outside the app (Files, a USB copy).
-2. Uninstall the debug app. **This deletes its data.**
-3. Install the release APK.
-4. On the first-run screen choose **Restore from a backup file**.
-
-## 5. Keep the key safe
-
-- Store the `.jks` file and both passwords in two places you control, for example an
-  encrypted USB drive and a password manager.
-- Never upload the keystore or `keystore.properties` to GitHub, Drive or a chat.
-- `keytool -list -v -keystore C:\keys\study-planner-release.jks` shows the
-  certificate fingerprint. Note it down so you can confirm later builds use the
-  same key (`apksigner verify --print-certs app-release.apk`).
+Debug builds use a different key. To move to the release build: in the debug app use
+**Settings > Backup and restore > Export backup**, save the file outside the app,
+uninstall the debug app, install `study-planner.apk`, then choose
+**Restore from a backup file**.

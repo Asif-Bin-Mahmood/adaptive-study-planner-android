@@ -1,0 +1,182 @@
+name: Release
+
+# Push a tag like v1.0.0 (matching package.json) to build, sign and publish
+# study-planner.apk to a GitHub Release. Run it manually to build and verify a signed
+# APK without publishing anything.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check signing configuration
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ vars.RELEASE_CERT_SHA256 }}
+        run: |
+          missing=()
+          [ -n "$KEYSTORE_BASE64" ] || missing+=(ANDROID_KEYSTORE_BASE64)
+          [ -n "$KEYSTORE_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
+          [ -n "$KEY_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
+          [ -n "$KEY_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
+          [ -n "$EXPECTED_CERT_SHA256" ] || missing+=("RELEASE_CERT_SHA256 (variable)")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Release signing is not configured. Missing: ${missing[*]}. See docs/RELEASE_SIGNING.md."
+            exit 1
+          fi
+
+      - name: Check version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production web build
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Install Android SDK packages
+        run: |
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0" > /dev/null
+          exit "${PIPESTATUS[1]}"
+
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          export ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/release.keystore"
+          trap 'rm -f "$ANDROID_KEYSTORE_FILE"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Verify APK and signature
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.RELEASE_CERT_SHA256 }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          test -s "$apk" || { echo "::error::Signed release APK missing or empty."; exit 1; }
+          bt="$ANDROID_HOME/build-tools/35.0.0"
+          "$bt/apksigner" verify --verbose --print-certs "$apk" > signer.txt
+          grep -E "^Verified using|Signer #1 certificate (DN|SHA-256)" signer.txt
+          actual=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' signer.txt)
+          expected=$(echo "$EXPECTED_CERT_SHA256" | tr -d ': ' | tr 'A-F' 'a-f')
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::APK is signed with certificate $actual, expected $expected. Refusing to publish."
+            exit 1
+          fi
+          name=$("$bt/aapt2" dump badging "$apk" | head -1)
+          echo "$name"
+          echo "$name" | grep -q "versionName='$VERSION'" || { echo "::error::versionName does not match $VERSION."; exit 1; }
+          mkdir -p dist-release
+          cp "$apk" dist-release/study-planner.apk
+          (cd dist-release && sha256sum study-planner.apk > study-planner.apk.sha256 && cat study-planner.apk.sha256)
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-apk
+          path: dist-release/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-apk
+          path: dist-release
+
+      - name: Write changelog
+        run: |
+          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          range=${prev:+$prev..}$GITHUB_REF_NAME
+          {
+            echo "## Changes"
+            git log --no-merges --format='- %s' "$range"
+            echo
+            echo "## Install"
+            echo "Download \`study-planner.apk\` below and open it on your Android phone (Android 7.0 or newer)."
+            echo "Updates must be signed with the same key as the version you have installed, so always use APKs from this page."
+            echo
+            echo "SHA-256: \`$(cut -d' ' -f1 dist-release/study-planner.apk.sha256)\`"
+          } > notes.md
+          cat notes.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Study Planner ${GITHUB_REF_NAME}" \
+            --notes-file notes.md \
+            --verify-tag \
+            dist-release/study-planner.apk \
+            dist-release/study-planner.apk.sha256

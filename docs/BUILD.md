@@ -2,7 +2,8 @@
 
 The commands are for Windows PowerShell. On macOS or Linux use `./gradlew` instead of
 `.\gradlew.bat` and `shasum -a 256` / `sha256sum` instead of `Get-FileHash`. Every push to
-`main` also builds a debug APK in GitHub Actions (see `.github/workflows/android.yml`).
+`main` also builds a debug APK in GitHub Actions (see `.github/workflows/android.yml`). To just
+install the app, download `study-planner.apk` from the Releases page instead.
 
 These steps build the debug APK and install it on your phone. You need about
 10 GB of free disk space and an internet connection for the first build (Gradle

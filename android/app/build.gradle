@@ -1,12 +1,24 @@
 apply plugin: 'com.android.application'
 
-// Release signing reads android/keystore.properties, which is never committed or zipped.
-// See docs/RELEASE_SIGNING.md.
+import groovy.json.JsonSlurper
+
+// One version source: package.json. versionCode = major * 10000 + minor * 100 + patch,
+// so every release must raise the package.json version.
+def appVersion = new JsonSlurper().parse(rootProject.file('../package.json')).version as String
+def versionParts = appVersion.tokenize('.').collect { it as int }
+def appVersionCode = versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2]
+
+// Release signing. CI passes the keystore through environment variables (from GitHub
+// Actions secrets); local builds can use android/keystore.properties instead. Neither the
+// keystore nor its passwords are ever committed. See docs/RELEASE_SIGNING.md.
 def keystorePropertiesFile = rootProject.file('keystore.properties')
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
 }
+def signingValue = { String env, String prop -> System.getenv(env) ?: keystoreProperties[prop] }
+def releaseStoreFile = signingValue('ANDROID_KEYSTORE_FILE', 'storeFile')
+def hasReleaseSigning = releaseStoreFile != null
 
 android {
     namespace = "io.github.asifbinmahmood.studyplanner"
@@ -15,8 +27,8 @@ android {
         applicationId "io.github.asifbinmahmood.studyplanner"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -25,18 +37,19 @@ android {
         }
     }
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
+        if (hasReleaseSigning) {
             release {
-                storeFile rootProject.file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+                storeFile rootProject.file(releaseStoreFile)
+                storePassword signingValue('ANDROID_KEYSTORE_PASSWORD', 'storePassword')
+                keyAlias signingValue('ANDROID_KEY_ALIAS', 'keyAlias')
+                keyPassword signingValue('ANDROID_KEY_PASSWORD', 'keyPassword')
             }
         }
     }
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists()) {
+            // Without signing details the release APK is left unsigned and cannot be installed.
+            if (hasReleaseSigning) {
                 signingConfig signingConfigs.release
             }
             minifyEnabled false
