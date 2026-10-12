@@ -62,7 +62,10 @@ Paste the output straight into the secret and do not save it in a file.
 ### 5. Check the setup without publishing
 
 Open **Actions > Release > Run workflow** on `main`. This builds and verifies a signed
-APK but publishes nothing. It fails with a list of anything missing.
+APK but publishes nothing. It fails with a list of anything missing, and the
+**Validate signing secrets** step reports (yes/no only) whether the keystore, alias and
+key password work. "Password is not ASCII" from Gradle means a password secret contains
+a line break, tab or non-ASCII character, often from copying; paste it again exactly.
 
 ## Publishing a version
 

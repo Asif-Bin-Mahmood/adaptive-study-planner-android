@@ -48,6 +48,12 @@ jobs:
             echo "::error::Release signing is not configured. Missing: ${missing[*]}. See docs/RELEASE_SIGNING.md."
             exit 1
           fi
+          expected=$(echo "$EXPECTED_CERT_SHA256" | tr -d ': ' | tr 'A-F' 'a-f')
+          if ! [[ "$expected" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::RELEASE_CERT_SHA256 is not a SHA-256 fingerprint. Use the SHA256 value from keytool -list -v, for example AB:CD:..., without the 'SHA256:' label."
+            exit 1
+          fi
+          echo "RELEASE_CERT_SHA256 is set and is a well-formed SHA-256 fingerprint."
 
       - name: Check version
         id: version
@@ -70,6 +76,20 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+
+      # Prints yes/no results only, so a wrong secret fails here with a clear reason.
+      - name: Validate signing secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          keystore="$RUNNER_TEMP/check.keystore"
+          trap 'rm -f "$keystore"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$keystore" \
+            || { echo "::error::ANDROID_KEYSTORE_BASE64 is not valid base64."; exit 1; }
+          java .github/scripts/CheckSigningKey.java "$keystore"
 
       - name: Install dependencies
         run: npm ci
