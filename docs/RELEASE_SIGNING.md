@@ -72,12 +72,15 @@ a line break, tab or non-ASCII character, often from copying; paste it again exa
 1. Raise `version` in `package.json` (for example `1.0.0` to `1.0.1`). The Android
    `versionName` and `versionCode` are derived from it, and Android refuses an update
    whose `versionCode` is not higher.
-2. Run `npm install --package-lock-only`, commit, and push to `main`.
-3. Tag and push: `git tag v1.0.1 && git push origin v1.0.1`.
+2. Add a `## [1.0.1] - YYYY-MM-DD` section to `CHANGELOG.md` describing the changes
+   for users. It becomes the release notes.
+3. Run `npm install --package-lock-only`, commit, and push to `main`.
+4. Tag and push: `git tag -a v1.0.1 -m "Study Planner 1.0.1" && git push origin v1.0.1`.
 
-The workflow checks that the tag matches `package.json`, runs the type check, tests and
-build, signs the APK, verifies the signature and certificate fingerprint, and creates
-the release with the APK, its SHA-256 file and a changelog.
+The workflow checks that the tag matches `package.json` and that `CHANGELOG.md` has a
+section for the version, runs the type check, tests and build, signs the APK, verifies
+the signature and certificate fingerprint, and creates the release with the APK, its
+SHA-256 file and the changelog section as notes.
 
 ## Local signed builds
 

@@ -24,4 +24,4 @@ especially welcome:
 
 ## Supported versions
 
-Only the latest commit on `main` receives fixes.
+Only the latest release receives fixes.

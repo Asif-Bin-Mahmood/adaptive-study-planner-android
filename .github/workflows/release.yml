@@ -63,6 +63,10 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version."
             exit 1
           fi
+          if [ -z "$(.github/scripts/release-notes.sh "$version")" ]; then
+            echo "::error::CHANGELOG.md has no '## [$version]' section. Add release notes before releasing."
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
@@ -165,7 +169,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -173,19 +176,21 @@ jobs:
           name: release-apk
           path: dist-release
 
-      - name: Write changelog
+      - name: Write release notes
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
-          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
-          range=${prev:+$prev..}$GITHUB_REF_NAME
           {
-            echo "## Changes"
-            git log --no-merges --format='- %s' "$range"
+            .github/scripts/release-notes.sh "$VERSION"
             echo
             echo "## Install"
-            echo "Download \`study-planner.apk\` below and open it on your Android phone (Android 7.0 or newer)."
-            echo "Updates must be signed with the same key as the version you have installed, so always use APKs from this page."
             echo
-            echo "SHA-256: \`$(cut -d' ' -f1 dist-release/study-planner.apk.sha256)\`"
+            echo "1. Download \`study-planner.apk\` below on an Android 7.0 or newer phone."
+            echo "2. Open it and allow your browser or file manager to install unknown apps when asked."
+            echo
+            echo "Future updates install over this version only when downloaded from this page."
+            echo
+            echo "**SHA-256:** \`$(cut -d' ' -f1 dist-release/study-planner.apk.sha256)\`"
           } > notes.md
           cat notes.md
 
